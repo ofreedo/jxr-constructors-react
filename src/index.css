@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Runtime-computed custom properties used by the homepage hero animation
+  (HeroAnimated). These are set imperatively via ref.style.setProperty()
+  in useLayoutEffect, not statically knowable at build time, so they
+  can't live in tailwind.config.ts the way the fixed color/keyframe
+  tokens do. Declared here with safe fallback defaults so nothing is
+  visually broken before the first layout effect runs.
+*/
+:root {
+  --logo-tx: 0px;
+  --logo-ty: 0px;
+  --logo-scale: 1;
+  --len: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg-warm text-charcoal antialiased;
+  font-family: theme("fontFamily.body");
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply text-jxr-black leading-[1.15] mb-[0.5em];
+  font-family: theme("fontFamily.head");
+  font-weight: 600;
+}
+
+/*
+  Fluid type scale, ported from the original stylesheet's clamp()
+  values — Tailwind's base reset normalizes heading sizes down to
+  near body-text size otherwise, which is why these need restating
+  explicitly rather than relying on browser or Tailwind defaults.
+*/
+h1 {
+  font-size: clamp(2.1rem, 4vw, 3.2rem);
+}
+h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+h3 {
+  font-size: 1.3rem;
+}
+
+p {
+  @apply text-charcoal-soft mb-4;
+}
+
+a {
+  @apply text-jxr-blue;
+}
+
+/*
+  Scroll-reveal system, ported from the original stylesheet almost
+  verbatim. React drives visibility via a `data-visible` attribute
+  (set by useScrollReveal) instead of the original's `.is-visible`
+  class toggle, but the transition values, stagger delays, and
+  reduced-motion escape hatch are unchanged.
+*/
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal[data-visible] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-group > * {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal-group[data-visible] > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-group[data-visible] > *:nth-child(1) { transition-delay: 0.05s; }
+.reveal-group[data-visible] > *:nth-child(2) { transition-delay: 0.15s; }
+.reveal-group[data-visible] > *:nth-child(3) { transition-delay: 0.25s; }
+.reveal-group[data-visible] > *:nth-child(4) { transition-delay: 0.35s; }
+.reveal-group[data-visible] > *:nth-child(5) { transition-delay: 0.45s; }
+.reveal-group[data-visible] > *:nth-child(6) { transition-delay: 0.55s; }
+/* Groups larger than 6 (e.g. the 10-card project portfolio grid) — every
+   item past the sixth lands together at the same trailing delay instead
+   of popping in with no delay at all. */
+.reveal-group[data-visible] > *:nth-child(n+7) { transition-delay: 0.55s; }
+
+/* SectionLabel's tick mark: draws in (scaleX 0 -> 1) once the nearest
+   ancestor .reveal/.reveal-group becomes visible. Origin left so it
+   grows rightward, matching a hand-drawn underline feel. */
+.section-label::before {
+  content: "";
+  width: 1.25rem;
+  height: 1px;
+  background-color: theme("colors.jxr-blue");
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease-out 0.15s;
+}
+
+.section-label.is-dark::before {
+  background-color: theme("colors.jxr-blue-bright");
+}
+
+.reveal[data-visible] .section-label::before,
+.reveal-group[data-visible] .section-label::before {
+  transform: scaleX(1);
+}
+
+/* TimelineMarker's dot: pops in with a back-out bounce once the parent
+   .reveal-group becomes visible. */
+.timeline-marker {
+  transform: translateX(-50%) scale(0);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+}
+
+.reveal-group[data-visible] .timeline-marker {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Reduced-motion escape hatch for everything above. Placed after the
+   unconditional rules (not just inside an early media query) so equal
+   specificity + later source order wins the cascade. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-group > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .section-label::before {
+    transform: none;
+    transition: none;
+  }
+  .timeline-marker {
+    transform: translateX(-50%);
+    transition: none;
+  }
+}
